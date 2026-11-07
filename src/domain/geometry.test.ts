@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { containsPoint, movedRect, noteRectFromGesture, rectFromPoints } from './geometry'
+import {
+  containsPoint,
+  movedRect,
+  noteRectFromGesture,
+  rectFromPoints,
+  resizedRect,
+} from './geometry'
 
 const bounds = { width: 800, height: 600 }
 const minSize = { width: 140, height: 100 }
@@ -59,6 +65,34 @@ describe('movedRect', () => {
     expect(
       movedRect({ x: 600, y: 40, width: 200, height: 160 }, { x: 500, y: -80 }, bounds),
     ).toEqual({ x: 600, y: 0, width: 200, height: 160 })
+  })
+})
+
+describe('resizedRect', () => {
+  const rect = { x: 40, y: 50, width: 200, height: 160 }
+
+  it('grows from the bottom-right corner', () => {
+    expect(resizedRect(rect, { x: 30, y: 20 }, bounds, minSize)).toEqual({
+      x: 40,
+      y: 50,
+      width: 230,
+      height: 180,
+    })
+  })
+
+  it('does not shrink past the minimum size', () => {
+    expect(resizedRect(rect, { x: -100, y: -90 }, bounds, minSize)).toEqual({
+      x: 40,
+      y: 50,
+      width: 140,
+      height: 100,
+    })
+  })
+
+  it('stops at the board edge', () => {
+    expect(
+      resizedRect({ x: 600, y: 440, width: 160, height: 140 }, { x: 80, y: 80 }, bounds, minSize),
+    ).toEqual({ x: 600, y: 440, width: 200, height: 160 })
   })
 })
 

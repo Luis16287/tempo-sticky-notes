@@ -48,8 +48,9 @@ function toNote(value: unknown): Note[] {
       y: note.y,
       width: note.width,
       height: note.height,
-      // A note saved before text existed still opens.
+      // A note saved before text or stacking existed still opens.
       text: typeof note.text === 'string' ? note.text : '',
+      zIndex: typeof note.zIndex === 'number' ? note.zIndex : 1,
     },
   ]
 }

@@ -24,6 +24,7 @@ const note = {
   width: 200,
   height: 160,
   text: 'Hello',
+  zIndex: 1,
 }
 
 describe('parseStoredNotes', () => {
@@ -41,7 +42,17 @@ describe('parseStoredNotes', () => {
       version: 1,
       notes: [{ id: 'a', x: 1, y: 2, width: 200, height: 160 }],
     })
-    expect(parseStoredNotes(raw)).toEqual([{ id: 'a', x: 1, y: 2, width: 200, height: 160, text: '' }])
+    expect(parseStoredNotes(raw)).toEqual([
+      { id: 'a', x: 1, y: 2, width: 200, height: 160, text: '', zIndex: 1 },
+    ])
+  })
+
+  it('fills in stacking when an older note does not have it', () => {
+    const raw = JSON.stringify({
+      version: 1,
+      notes: [{ id: 'a', x: 1, y: 2, width: 200, height: 160, text: 'Hi' }],
+    })
+    expect(parseStoredNotes(raw)[0]?.zIndex).toBe(1)
   })
 })
 

@@ -7,6 +7,7 @@ export interface Note {
   width: number
   height: number
   text: string
+  zIndex: number
 }
 
 export const MIN_NOTE_SIZE = { width: 140, height: 100 }
@@ -19,10 +20,24 @@ export type NotesAction =
   | { type: 'move'; id: string; x: number; y: number }
   | { type: 'remove'; id: string }
   | { type: 'changeText'; id: string; text: string }
+  | { type: 'resize'; id: string; width: number; height: number }
+  | { type: 'bringToFront'; id: string }
   | { type: 'replace'; notes: Note[] }
 
-export function createNote(rect: Rect, id: string = crypto.randomUUID()): Note {
-  return { id, x: rect.x, y: rect.y, width: rect.width, height: rect.height, text: '' }
+export function createNote(rect: Rect, id: string = crypto.randomUUID(), zIndex = 1): Note {
+  return {
+    id,
+    x: rect.x,
+    y: rect.y,
+    width: rect.width,
+    height: rect.height,
+    text: '',
+    zIndex,
+  }
+}
+
+export function nextZIndex(notes: readonly Pick<Note, 'zIndex'>[]): number {
+  return notes.reduce((max, note) => Math.max(max, note.zIndex), 0) + 1
 }
 
 export function noteCountLabel(count: number): string {
@@ -31,7 +46,7 @@ export function noteCountLabel(count: number): string {
   return `${count} notes`
 }
 
-export function notesReducer(notes: readonly Note[], action: NotesAction): Note[] {
+export function notesReducer(notes: readonly Note[], action: NotesAction): readonly Note[] {
   switch (action.type) {
     case 'add':
       return [...notes, action.note]
@@ -45,6 +60,21 @@ export function notesReducer(notes: readonly Note[], action: NotesAction): Note[
       return notes.map((note) =>
         note.id === action.id ? { ...note, text: action.text } : note,
       )
+    case 'resize':
+      return notes.map((note) =>
+        note.id === action.id
+          ? { ...note, width: action.width, height: action.height }
+          : note,
+      )
+    case 'bringToFront': {
+      const current = notes.find((note) => note.id === action.id)
+      const top = notes.reduce((max, note) => Math.max(max, note.zIndex), 0)
+      // Already in front. A new number would save the list for no visible change.
+      if (!current || current.zIndex === top) return notes
+      return notes.map((note) =>
+        note.id === action.id ? { ...note, zIndex: top + 1 } : note,
+      )
+    }
     case 'replace':
       return action.notes
   }

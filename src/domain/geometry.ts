@@ -123,6 +123,19 @@ export function noteRectFromGesture(
   )
 }
 
+// The top-left corner stays where it is. The size cannot pass the minimum,
+// and it cannot cross the edge of the board.
+export function resizedRect(rect: Rect, delta: Point, bounds: Size, min: Size): Rect {
+  const maxWidth = Math.max(0, bounds.width - rect.x)
+  const maxHeight = Math.max(0, bounds.height - rect.y)
+  return {
+    x: rect.x,
+    y: rect.y,
+    width: clamp(rect.width + delta.x, Math.min(min.width, maxWidth), maxWidth),
+    height: clamp(rect.height + delta.y, Math.min(min.height, maxHeight), maxHeight),
+  }
+}
+
 // The outline follows the pointer as it is. The minimum size is applied only
 // when the button is released, so the outline does not jump while drawing.
 export function previewRect(start: Point, end: Point, bounds: Size): Rect {

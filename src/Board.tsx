@@ -23,6 +23,8 @@ interface BoardProps {
   onMove: (id: string, x: number, y: number) => void
   onRemove: (id: string) => void
   onChangeText: (id: string, text: string) => void
+  onResize: (id: string, width: number, height: number) => void
+  onBringToFront: (id: string) => void
 }
 
 export function Board({
@@ -33,6 +35,8 @@ export function Board({
   onMove,
   onRemove,
   onChangeText,
+  onResize,
+  onBringToFront,
 }: BoardProps) {
   const boardRef = useRef<HTMLElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
@@ -84,7 +88,7 @@ export function Board({
   function paintPreview(rect: Rect) {
     const preview = previewRef.current
     if (!preview) return
-    preview.hidden = false
+    preview.classList.add('note-preview-visible')
     preview.style.transform = `translate(${rect.x}px, ${rect.y}px)`
     preview.style.width = `${rect.width}px`
     preview.style.height = `${rect.height}px`
@@ -93,7 +97,7 @@ export function Board({
   function hidePreview() {
     const preview = previewRef.current
     if (!preview) return
-    preview.hidden = true
+    preview.classList.remove('note-preview-visible')
   }
 
   function onPointerDown(event: PointerEvent<HTMLElement>) {
@@ -161,6 +165,8 @@ export function Board({
           onMove={onMove}
           onDrop={dropNote}
           onChangeText={onChangeText}
+          onResize={onResize}
+          onBringToFront={onBringToFront}
           startEditing={note.id === editingId}
         />
       ))}
@@ -176,7 +182,7 @@ export function Board({
           />
         </svg>
       </div>
-      <div ref={previewRef} className="note note-preview" hidden />
+      <div ref={previewRef} className="note note-preview" />
     </main>
   )
 }

@@ -1,6 +1,6 @@
 import { useEffect, useReducer, useRef, useState } from 'react'
 import { Board } from './Board.tsx'
-import { createNote, noteCountLabel, notesReducer } from './domain/notes'
+import { createNote, nextZIndex, noteCountLabel, notesReducer } from './domain/notes'
 import { createLocalStorageNoteRepository } from './persistence/noteRepository.ts'
 
 const SAVE_DELAY_MS = 300
@@ -65,7 +65,7 @@ export default function App() {
         creating={creating}
         editingId={editingId}
         onCreate={(rect) => {
-          const note = createNote(rect)
+          const note = createNote(rect, crypto.randomUUID(), nextZIndex(notes))
           dispatch({ type: 'add', note })
           setEditingId(note.id)
           // One press of the button creates one note. The next note needs the button again.
@@ -74,6 +74,8 @@ export default function App() {
         onMove={(id, x, y) => dispatch({ type: 'move', id, x, y })}
         onRemove={(id) => dispatch({ type: 'remove', id })}
         onChangeText={(id, text) => dispatch({ type: 'changeText', id, text })}
+        onResize={(id, width, height) => dispatch({ type: 'resize', id, width, height })}
+        onBringToFront={(id) => dispatch({ type: 'bringToFront', id })}
       />
     </div>
   )

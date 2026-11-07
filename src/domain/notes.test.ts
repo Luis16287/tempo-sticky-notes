@@ -56,4 +56,37 @@ describe('notesReducer', () => {
     expect(next[0]).toEqual({ ...existing[0], text: 'Hello' })
     expect(next[1]).toBe(existing[1])
   })
+
+  it('resizes one note and leaves the others as they are', () => {
+    const existing = [
+      createNote({ x: 0, y: 0, width: 200, height: 160 }, 'a'),
+      createNote({ x: 40, y: 50, width: 200, height: 160 }, 'b'),
+    ]
+
+    const next = notesReducer(existing, { type: 'resize', id: 'b', width: 240, height: 180 })
+
+    expect(next[1]).toEqual({ ...existing[1], width: 240, height: 180 })
+    expect(next[0]).toBe(existing[0])
+  })
+
+  it('raises one note above the others', () => {
+    const existing = [
+      createNote({ x: 0, y: 0, width: 200, height: 160 }, 'a', 1),
+      createNote({ x: 40, y: 50, width: 200, height: 160 }, 'b', 2),
+    ]
+
+    const next = notesReducer(existing, { type: 'bringToFront', id: 'a' })
+
+    expect(next[0]).toEqual({ ...existing[0], zIndex: 3 })
+    expect(next[1]).toBe(existing[1])
+  })
+
+  it('leaves the list alone when the note is already in front', () => {
+    const existing = [
+      createNote({ x: 0, y: 0, width: 200, height: 160 }, 'a', 1),
+      createNote({ x: 40, y: 50, width: 200, height: 160 }, 'b', 2),
+    ]
+
+    expect(notesReducer(existing, { type: 'bringToFront', id: 'b' })).toBe(existing)
+  })
 })
