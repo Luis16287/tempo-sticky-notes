@@ -32,4 +32,16 @@ describe('notesReducer', () => {
     expect(next[1]).toEqual({ ...existing[1], x: 80, y: 90 })
     expect(existing[1]?.x).toBe(40)
   })
+
+  it('removes one note and leaves the others in place', () => {
+    const existing = [
+      createNote({ x: 0, y: 0, width: 200, height: 160 }, 'a'),
+      createNote({ x: 40, y: 50, width: 200, height: 160 }, 'b'),
+    ]
+
+    const next = notesReducer(existing, { type: 'remove', id: 'a' })
+
+    expect(next).toEqual([existing[1]])
+    expect(existing).toHaveLength(2)
+  })
 })

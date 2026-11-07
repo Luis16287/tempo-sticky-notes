@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { movedRect, noteRectFromGesture, rectFromPoints } from './geometry'
+import { containsPoint, movedRect, noteRectFromGesture, rectFromPoints } from './geometry'
 
 const bounds = { width: 800, height: 600 }
 const minSize = { width: 140, height: 100 }
@@ -59,5 +59,17 @@ describe('movedRect', () => {
     expect(
       movedRect({ x: 600, y: 40, width: 200, height: 160 }, { x: 500, y: -80 }, bounds),
     ).toEqual({ x: 600, y: 0, width: 200, height: 160 })
+  })
+})
+
+describe('containsPoint', () => {
+  const zone = { x: 10, y: 20, width: 80, height: 40 }
+
+  it('includes the border of the zone', () => {
+    expect(containsPoint(zone, { x: 90, y: 60 })).toBe(true)
+  })
+
+  it('rejects a point just outside the zone', () => {
+    expect(containsPoint(zone, { x: 91, y: 40 })).toBe(false)
   })
 })

@@ -19,6 +19,17 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
 }
 
+// The border counts as inside. Releasing the pointer on the edge of the trash
+// should still delete the note.
+export function containsPoint(rect: Rect, point: Point): boolean {
+  return (
+    point.x >= rect.x &&
+    point.x <= rect.x + rect.width &&
+    point.y >= rect.y &&
+    point.y <= rect.y + rect.height
+  )
+}
+
 export function clampPoint(point: Point, bounds: Size): Point {
   return {
     x: clamp(point.x, 0, bounds.width),

@@ -5,10 +5,20 @@ import type { Note } from './domain/notes'
 interface NoteCardProps {
   note: Note
   getBoardSize: () => Size | null
+  isOverTrash: (clientX: number, clientY: number) => boolean
+  onTrashHover: (over: boolean) => void
   onMove: (id: string, x: number, y: number) => void
+  onDrop: (id: string, x: number, y: number, clientX: number, clientY: number) => void
 }
 
-export function NoteCard({ note, getBoardSize, onMove }: NoteCardProps) {
+export function NoteCard({
+  note,
+  getBoardSize,
+  isOverTrash,
+  onTrashHover,
+  onMove,
+  onDrop,
+}: NoteCardProps) {
   const ref = useRef<HTMLDivElement>(null)
   const dragRef = useRef<{
     pointerId: number
@@ -64,6 +74,7 @@ export function NoteCard({ note, getBoardSize, onMove }: NoteCardProps) {
     // Follow the pointer on this element. Saving the position in React state
     // on every move would draw the other notes again.
     paint(next.x, next.y)
+    onTrashHover(isOverTrash(event.clientX, event.clientY))
   }
 
   function endDrag(event: PointerEvent<HTMLDivElement>, commit: boolean) {
@@ -71,8 +82,15 @@ export function NoteCard({ note, getBoardSize, onMove }: NoteCardProps) {
     if (!drag || drag.pointerId !== event.pointerId) return
     const next = nextPosition(event.clientX, event.clientY)
     dragRef.current = null
+    onTrashHover(false)
     if (!commit) {
       paint(drag.originX, drag.originY)
+      return
+    }
+    // The pointer decides, not the edge of the note. Releasing outside the
+    // trash keeps the note even if the note itself crossed the zone.
+    if (isOverTrash(event.clientX, event.clientY)) {
+      onDrop(note.id, next?.x ?? drag.originX, next?.y ?? drag.originY, event.clientX, event.clientY)
       return
     }
     if (!next || (next.x === drag.originX && next.y === drag.originY)) return

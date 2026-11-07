@@ -1,5 +1,12 @@
 import { useRef, type PointerEvent } from 'react'
-import { noteRectFromGesture, previewRect, type Point, type Rect, type Size } from './domain/geometry'
+import {
+  containsPoint,
+  noteRectFromGesture,
+  previewRect,
+  type Point,
+  type Rect,
+  type Size,
+} from './domain/geometry'
 import {
   CLICK_SLOP,
   DEFAULT_NOTE_SIZE,
@@ -13,12 +20,39 @@ interface BoardProps {
   creating: boolean
   onCreate: (rect: Rect) => void
   onMove: (id: string, x: number, y: number) => void
+  onRemove: (id: string) => void
 }
 
-export function Board({ notes, creating, onCreate, onMove }: BoardProps) {
+export function Board({ notes, creating, onCreate, onMove, onRemove }: BoardProps) {
   const boardRef = useRef<HTMLElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
+  const trashRef = useRef<HTMLDivElement>(null)
   const gestureRef = useRef<{ pointerId: number; start: Point } | null>(null)
+
+  // The highlight is a class on the trash element. React state here would
+  // draw the notes again and reset the note that is being dragged.
+  function setTrashOver(over: boolean) {
+    trashRef.current?.classList.toggle('trash-over', over)
+  }
+
+  function isOverTrash(clientX: number, clientY: number): boolean {
+    const trash = trashRef.current
+    if (!trash) return false
+    const bounds = trash.getBoundingClientRect()
+    return containsPoint(
+      { x: bounds.left, y: bounds.top, width: bounds.width, height: bounds.height },
+      { x: clientX, y: clientY },
+    )
+  }
+
+  function dropNote(id: string, x: number, y: number, clientX: number, clientY: number) {
+    setTrashOver(false)
+    if (isOverTrash(clientX, clientY)) {
+      onRemove(id)
+      return
+    }
+    onMove(id, x, y)
+  }
 
   function boardSize(): Size | null {
     const board = boardRef.current
@@ -108,8 +142,28 @@ export function Board({ notes, creating, onCreate, onMove }: BoardProps) {
       onPointerCancel={(event) => finishGesture(event, false)}
     >
       {notes.map((note) => (
-        <NoteCard key={note.id} note={note} getBoardSize={boardSize} onMove={onMove} />
+        <NoteCard
+          key={note.id}
+          note={note}
+          getBoardSize={boardSize}
+          isOverTrash={isOverTrash}
+          onTrashHover={setTrashOver}
+          onMove={onMove}
+          onDrop={dropNote}
+        />
       ))}
+      <div ref={trashRef} className="trash" role="img" aria-label="Trash">
+        <svg className="trash-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M4 7h16M9 7V5h6v2M7 7l1 13h8l1-13M10 11v6M14 11v6"
+          />
+        </svg>
+      </div>
       <div ref={previewRef} className="note note-preview" hidden />
     </main>
   )

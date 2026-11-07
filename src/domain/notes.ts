@@ -16,6 +16,7 @@ export const CLICK_SLOP = 4
 export type NotesAction =
   | { type: 'add'; note: Note }
   | { type: 'move'; id: string; x: number; y: number }
+  | { type: 'remove'; id: string }
 
 export function createNote(rect: Rect, id: string = crypto.randomUUID()): Note {
   return { id, x: rect.x, y: rect.y, width: rect.width, height: rect.height }
@@ -35,5 +36,7 @@ export function notesReducer(notes: readonly Note[], action: NotesAction): Note[
       return notes.map((note) =>
         note.id === action.id ? { ...note, x: action.x, y: action.y } : note,
       )
+    case 'remove':
+      return notes.filter((note) => note.id !== action.id)
   }
 }

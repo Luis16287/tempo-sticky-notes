@@ -31,6 +31,7 @@ export default function App() {
           setCreating(false)
         }}
         onMove={(id, x, y) => dispatch({ type: 'move', id, x, y })}
+        onRemove={(id) => dispatch({ type: 'remove', id })}
       />
     </div>
   )
