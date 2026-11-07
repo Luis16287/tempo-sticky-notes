@@ -6,6 +6,7 @@ export interface Note {
   y: number
   width: number
   height: number
+  text: string
 }
 
 export const MIN_NOTE_SIZE = { width: 140, height: 100 }
@@ -17,9 +18,11 @@ export type NotesAction =
   | { type: 'add'; note: Note }
   | { type: 'move'; id: string; x: number; y: number }
   | { type: 'remove'; id: string }
+  | { type: 'changeText'; id: string; text: string }
+  | { type: 'replace'; notes: Note[] }
 
 export function createNote(rect: Rect, id: string = crypto.randomUUID()): Note {
-  return { id, x: rect.x, y: rect.y, width: rect.width, height: rect.height }
+  return { id, x: rect.x, y: rect.y, width: rect.width, height: rect.height, text: '' }
 }
 
 export function noteCountLabel(count: number): string {
@@ -38,5 +41,11 @@ export function notesReducer(notes: readonly Note[], action: NotesAction): Note[
       )
     case 'remove':
       return notes.filter((note) => note.id !== action.id)
+    case 'changeText':
+      return notes.map((note) =>
+        note.id === action.id ? { ...note, text: action.text } : note,
+      )
+    case 'replace':
+      return action.notes
   }
 }

@@ -18,12 +18,22 @@ import { NoteCard } from './Note.tsx'
 interface BoardProps {
   notes: readonly Note[]
   creating: boolean
+  editingId: string | null
   onCreate: (rect: Rect) => void
   onMove: (id: string, x: number, y: number) => void
   onRemove: (id: string) => void
+  onChangeText: (id: string, text: string) => void
 }
 
-export function Board({ notes, creating, onCreate, onMove, onRemove }: BoardProps) {
+export function Board({
+  notes,
+  creating,
+  editingId,
+  onCreate,
+  onMove,
+  onRemove,
+  onChangeText,
+}: BoardProps) {
   const boardRef = useRef<HTMLElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
   const trashRef = useRef<HTMLDivElement>(null)
@@ -150,6 +160,8 @@ export function Board({ notes, creating, onCreate, onMove, onRemove }: BoardProp
           onTrashHover={setTrashOver}
           onMove={onMove}
           onDrop={dropNote}
+          onChangeText={onChangeText}
+          startEditing={note.id === editingId}
         />
       ))}
       <div ref={trashRef} className="trash" role="img" aria-label="Trash">

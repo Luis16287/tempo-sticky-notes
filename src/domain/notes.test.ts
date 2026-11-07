@@ -44,4 +44,16 @@ describe('notesReducer', () => {
     expect(next).toEqual([existing[1]])
     expect(existing).toHaveLength(2)
   })
+
+  it('changes the text of one note only', () => {
+    const existing = [
+      createNote({ x: 0, y: 0, width: 200, height: 160 }, 'a'),
+      createNote({ x: 40, y: 50, width: 200, height: 160 }, 'b'),
+    ]
+
+    const next = notesReducer(existing, { type: 'changeText', id: 'a', text: 'Hello' })
+
+    expect(next[0]).toEqual({ ...existing[0], text: 'Hello' })
+    expect(next[1]).toBe(existing[1])
+  })
 })

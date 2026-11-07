@@ -1,4 +1,4 @@
-import { useRef, type PointerEvent } from 'react'
+import { useEffect, useRef, type PointerEvent } from 'react'
 import { movedRect, type Size } from './domain/geometry'
 import type { Note } from './domain/notes'
 
@@ -9,6 +9,8 @@ interface NoteCardProps {
   onTrashHover: (over: boolean) => void
   onMove: (id: string, x: number, y: number) => void
   onDrop: (id: string, x: number, y: number, clientX: number, clientY: number) => void
+  onChangeText: (id: string, text: string) => void
+  startEditing: boolean
 }
 
 export function NoteCard({
@@ -18,8 +20,11 @@ export function NoteCard({
   onTrashHover,
   onMove,
   onDrop,
+  onChangeText,
+  startEditing,
 }: NoteCardProps) {
   const ref = useRef<HTMLDivElement>(null)
+  const textRef = useRef<HTMLTextAreaElement>(null)
   const dragRef = useRef<{
     pointerId: number
     originX: number
@@ -27,6 +32,11 @@ export function NoteCard({
     startClientX: number
     startClientY: number
   } | null>(null)
+
+  useEffect(() => {
+    // Notes restored from storage are not focused. Only the one just created.
+    if (startEditing) textRef.current?.focus()
+  }, [startEditing])
 
   function paint(x: number, y: number) {
     const element = ref.current
@@ -106,10 +116,31 @@ export function NoteCard({
         width: note.width,
         height: note.height,
       }}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={(event) => endDrag(event, true)}
-      onPointerCancel={(event) => endDrag(event, false)}
-    />
+    >
+      <div
+        className="note-header"
+        aria-label="Drag note"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={(event) => endDrag(event, true)}
+        onPointerCancel={(event) => endDrag(event, false)}
+      >
+        <svg className="note-grip" viewBox="0 0 16 10" aria-hidden="true">
+          <circle cx="2" cy="2" r="1.25" />
+          <circle cx="8" cy="2" r="1.25" />
+          <circle cx="14" cy="2" r="1.25" />
+          <circle cx="2" cy="8" r="1.25" />
+          <circle cx="8" cy="8" r="1.25" />
+          <circle cx="14" cy="8" r="1.25" />
+        </svg>
+      </div>
+      <textarea
+        ref={textRef}
+        className="note-text"
+        value={note.text}
+        aria-label="Note text"
+        onChange={(event) => onChangeText(note.id, event.target.value)}
+      />
+    </div>
   )
 }
