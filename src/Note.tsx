@@ -1,6 +1,6 @@
 import { useEffect, useRef, type PointerEvent } from 'react'
 import { movedRect, resizedRect, type Size } from './domain/geometry'
-import { MIN_NOTE_SIZE, type Note } from './domain/notes'
+import { MIN_NOTE_SIZE, NOTE_COLORS, noteColor, type Note, type NoteColor } from './domain/notes'
 
 interface NoteCardProps {
   note: Note
@@ -12,6 +12,7 @@ interface NoteCardProps {
   onChangeText: (id: string, text: string) => void
   onResize: (id: string, width: number, height: number) => void
   onBringToFront: (id: string) => void
+  onSetColor: (id: string, color: NoteColor) => void
   startEditing: boolean
 }
 
@@ -25,6 +26,7 @@ export function NoteCard({
   onChangeText,
   onResize,
   onBringToFront,
+  onSetColor,
   startEditing,
 }: NoteCardProps) {
   const ref = useRef<HTMLDivElement>(null)
@@ -129,6 +131,13 @@ export function NoteCard({
     onResize(note.id, next.width, next.height)
   }
 
+  function onColorDown(event: PointerEvent<HTMLButtonElement>, color: NoteColor) {
+    // A press on a color is not a drag.
+    event.stopPropagation()
+    raise()
+    onSetColor(note.id, color)
+  }
+
   function onPointerDown(event: PointerEvent<HTMLDivElement>) {
     if (event.button !== 0) return
     // The board also listens for a drag. Stopping here keeps a note drag
@@ -191,6 +200,7 @@ export function NoteCard({
         width: note.width,
         height: note.height,
         zIndex: note.zIndex,
+        background: noteColor(note.color).value,
       }}
     >
       <div
@@ -209,6 +219,19 @@ export function NoteCard({
           <circle cx="8" cy="8" r="1.25" />
           <circle cx="14" cy="8" r="1.25" />
         </svg>
+        <div className="note-colors">
+          {NOTE_COLORS.map((color) => (
+            <button
+              key={color.id}
+              type="button"
+              className={note.color === color.id ? 'note-color note-color-active' : 'note-color'}
+              style={{ background: color.value }}
+              aria-label={color.label}
+              aria-pressed={note.color === color.id}
+              onPointerDown={(event) => onColorDown(event, color.id)}
+            />
+          ))}
+        </div>
       </div>
       <textarea
         ref={textRef}

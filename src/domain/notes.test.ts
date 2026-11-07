@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createNote, noteCountLabel, notesReducer } from './notes'
+import { createNote, noteColor, noteCountLabel, notesReducer } from './notes'
 
 describe('noteCountLabel', () => {
   it('uses the singular only for one note', () => {
@@ -88,5 +88,29 @@ describe('notesReducer', () => {
     ]
 
     expect(notesReducer(existing, { type: 'bringToFront', id: 'b' })).toBe(existing)
+  })
+
+  it('changes the color of one note only', () => {
+    const existing = [
+      createNote({ x: 0, y: 0, width: 200, height: 160 }, 'a'),
+      createNote({ x: 40, y: 50, width: 200, height: 160 }, 'b'),
+    ]
+
+    const next = notesReducer(existing, { type: 'setColor', id: 'a', color: 'blue' })
+
+    expect(next[0]).toEqual({ ...existing[0], color: 'blue' })
+    expect(next[1]).toBe(existing[1])
+  })
+
+  it('leaves the list alone when the color does not change', () => {
+    const existing = [createNote({ x: 0, y: 0, width: 200, height: 160 }, 'a')]
+
+    expect(notesReducer(existing, { type: 'setColor', id: 'a', color: 'yellow' })).toBe(existing)
+  })
+})
+
+describe('noteColor', () => {
+  it('uses yellow when the color is unknown', () => {
+    expect(noteColor('red').id).toBe('yellow')
   })
 })

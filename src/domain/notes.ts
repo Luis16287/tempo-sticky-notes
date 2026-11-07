@@ -8,6 +8,21 @@ export interface Note {
   height: number
   text: string
   zIndex: number
+  color: NoteColor
+}
+
+export const NOTE_COLORS = [
+  { id: 'yellow', label: 'Yellow', value: '#ffe566' },
+  { id: 'orange', label: 'Orange', value: '#ffc06a' },
+  { id: 'pink', label: 'Pink', value: '#ff9eb8' },
+  { id: 'green', label: 'Green', value: '#8ed48a' },
+  { id: 'blue', label: 'Blue', value: '#7ec8f2' },
+] as const
+
+export type NoteColor = (typeof NOTE_COLORS)[number]['id']
+
+export function noteColor(id: string): (typeof NOTE_COLORS)[number] {
+  return NOTE_COLORS.find((color) => color.id === id) ?? NOTE_COLORS[0]
 }
 
 export const MIN_NOTE_SIZE = { width: 140, height: 100 }
@@ -22,6 +37,7 @@ export type NotesAction =
   | { type: 'changeText'; id: string; text: string }
   | { type: 'resize'; id: string; width: number; height: number }
   | { type: 'bringToFront'; id: string }
+  | { type: 'setColor'; id: string; color: NoteColor }
   | { type: 'replace'; notes: Note[] }
 
 export function createNote(rect: Rect, id: string = crypto.randomUUID(), zIndex = 1): Note {
@@ -33,6 +49,7 @@ export function createNote(rect: Rect, id: string = crypto.randomUUID(), zIndex 
     height: rect.height,
     text: '',
     zIndex,
+    color: 'yellow',
   }
 }
 
@@ -66,6 +83,13 @@ export function notesReducer(notes: readonly Note[], action: NotesAction): reado
           ? { ...note, width: action.width, height: action.height }
           : note,
       )
+    case 'setColor': {
+      const current = notes.find((note) => note.id === action.id)
+      if (!current || current.color === action.color) return notes
+      return notes.map((note) =>
+        note.id === action.id ? { ...note, color: action.color } : note,
+      )
+    }
     case 'bringToFront': {
       const current = notes.find((note) => note.id === action.id)
       const top = notes.reduce((max, note) => Math.max(max, note.zIndex), 0)

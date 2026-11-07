@@ -1,4 +1,4 @@
-import type { Note } from '../domain/notes.ts'
+import { noteColor, type Note } from '../domain/notes.ts'
 
 export const NOTES_STORAGE_KEY = 'sticky-notes'
 const SCHEMA_VERSION = 1
@@ -48,9 +48,10 @@ function toNote(value: unknown): Note[] {
       y: note.y,
       width: note.width,
       height: note.height,
-      // A note saved before text or stacking existed still opens.
+      // A note saved before text, stacking, or color existed still opens.
       text: typeof note.text === 'string' ? note.text : '',
       zIndex: typeof note.zIndex === 'number' ? note.zIndex : 1,
+      color: noteColor(typeof note.color === 'string' ? note.color : '').id,
     },
   ]
 }

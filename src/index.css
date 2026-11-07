@@ -11,6 +11,12 @@ body,
   margin: 0;
 }
 
+/* The page is designed in light colors. Without this, the browser can
+   darken them and two notes end up the same color as the board. */
+html {
+  color-scheme: light;
+}
+
 body {
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   color: #1c1917;
@@ -90,8 +96,7 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  background: #f6e7a2;
-  border: 1px solid #e4d27a;
+  border: 1px solid rgba(28, 25, 23, 0.16);
   border-radius: 2px;
   box-shadow: 0 8px 16px rgba(28, 25, 23, 0.12);
   display: flex;
@@ -103,8 +108,9 @@ body {
   flex: none;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   height: 28px;
+  padding: 0 8px;
   border-bottom: 1px solid rgba(28, 25, 23, 0.12);
   cursor: grab;
   touch-action: none;
@@ -120,6 +126,28 @@ body {
 
 .note-header:active {
   cursor: grabbing;
+}
+
+.note-colors {
+  display: flex;
+  gap: 4px;
+}
+
+.note-color {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 1px solid rgba(28, 25, 23, 0.25);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.note-header:active .note-color {
+  cursor: pointer;
+}
+
+.note-color-active {
+  box-shadow: 0 0 0 1px #1c1917;
 }
 
 .note-text {

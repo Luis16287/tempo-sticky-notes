@@ -76,6 +76,7 @@ export default function App() {
         onChangeText={(id, text) => dispatch({ type: 'changeText', id, text })}
         onResize={(id, width, height) => dispatch({ type: 'resize', id, width, height })}
         onBringToFront={(id) => dispatch({ type: 'bringToFront', id })}
+        onSetColor={(id, color) => dispatch({ type: 'setColor', id, color })}
       />
     </div>
   )

@@ -25,6 +25,7 @@ interface BoardProps {
   onChangeText: (id: string, text: string) => void
   onResize: (id: string, width: number, height: number) => void
   onBringToFront: (id: string) => void
+  onSetColor: (id: string, color: Note['color']) => void
 }
 
 export function Board({
@@ -37,6 +38,7 @@ export function Board({
   onChangeText,
   onResize,
   onBringToFront,
+  onSetColor,
 }: BoardProps) {
   const boardRef = useRef<HTMLElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
@@ -167,6 +169,7 @@ export function Board({
           onChangeText={onChangeText}
           onResize={onResize}
           onBringToFront={onBringToFront}
+          onSetColor={onSetColor}
           startEditing={note.id === editingId}
         />
       ))}

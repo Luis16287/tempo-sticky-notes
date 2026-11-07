@@ -25,6 +25,7 @@ const note = {
   height: 160,
   text: 'Hello',
   zIndex: 1,
+  color: 'yellow' as const,
 }
 
 describe('parseStoredNotes', () => {
@@ -43,7 +44,7 @@ describe('parseStoredNotes', () => {
       notes: [{ id: 'a', x: 1, y: 2, width: 200, height: 160 }],
     })
     expect(parseStoredNotes(raw)).toEqual([
-      { id: 'a', x: 1, y: 2, width: 200, height: 160, text: '', zIndex: 1 },
+      { id: 'a', x: 1, y: 2, width: 200, height: 160, text: '', zIndex: 1, color: 'yellow' },
     ])
   })
 
@@ -53,6 +54,14 @@ describe('parseStoredNotes', () => {
       notes: [{ id: 'a', x: 1, y: 2, width: 200, height: 160, text: 'Hi' }],
     })
     expect(parseStoredNotes(raw)[0]?.zIndex).toBe(1)
+  })
+
+  it('uses yellow when the stored color is missing or unknown', () => {
+    const raw = JSON.stringify({
+      version: 1,
+      notes: [{ id: 'a', x: 1, y: 2, width: 200, height: 160, text: 'Hi', zIndex: 2, color: 'red' }],
+    })
+    expect(parseStoredNotes(raw)[0]?.color).toBe('yellow')
   })
 })
 
