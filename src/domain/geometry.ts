@@ -39,6 +39,20 @@ export function distance(start: Point, end: Point): number {
   return Math.hypot(end.x - start.x, end.y - start.y)
 }
 
+// The note keeps its size while it moves. If the drag would leave the board,
+// the note stops at the edge instead of hanging outside.
+export function movedRect(rect: Rect, delta: Point, bounds: Size): Rect {
+  return clampRect(
+    {
+      x: rect.x + delta.x,
+      y: rect.y + delta.y,
+      width: rect.width,
+      height: rect.height,
+    },
+    bounds,
+  )
+}
+
 // Pull the rect back inside the board. The size is only reduced when the rect
 // is larger than the board, so a note does not shrink just because it was
 // drawn near the edge.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { noteRectFromGesture, rectFromPoints } from './geometry'
+import { movedRect, noteRectFromGesture, rectFromPoints } from './geometry'
 
 const bounds = { width: 800, height: 600 }
 const minSize = { width: 140, height: 100 }
@@ -45,5 +45,19 @@ describe('noteRectFromGesture', () => {
     expect(
       noteRectFromGesture({ x: 10, y: 8 }, { x: 0, y: 0 }, bounds, minSize, defaultSize),
     ).toEqual({ x: 0, y: 0, width: 140, height: 100 })
+  })
+})
+
+describe('movedRect', () => {
+  it('moves the note without changing its size', () => {
+    expect(
+      movedRect({ x: 10, y: 20, width: 200, height: 160 }, { x: 30, y: 40 }, bounds),
+    ).toEqual({ x: 40, y: 60, width: 200, height: 160 })
+  })
+
+  it('stops the note at the board edge', () => {
+    expect(
+      movedRect({ x: 600, y: 40, width: 200, height: 160 }, { x: 500, y: -80 }, bounds),
+    ).toEqual({ x: 600, y: 0, width: 200, height: 160 })
   })
 })

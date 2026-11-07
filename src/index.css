@@ -89,6 +89,17 @@ body {
   border: 1px solid #e4d27a;
   border-radius: 2px;
   box-shadow: 0 8px 16px rgba(28, 25, 23, 0.12);
+  cursor: grab;
+  touch-action: none;
+}
+
+.note:active {
+  cursor: grabbing;
+}
+
+/* Creating belongs to the board, even when the pointer starts on top of a note. */
+.board-creating .note:not(.note-preview) {
+  pointer-events: none;
 }
 
 .note-preview {
