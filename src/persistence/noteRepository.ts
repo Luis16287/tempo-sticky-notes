@@ -6,8 +6,13 @@ export const NOTES_STORAGE_KEY = 'sticky-notes'
 export const REPOSITORY_DELAY_MS = 200
 const SCHEMA_VERSION = 1
 
+export interface LoadResult {
+  notes: Note[]
+  ignored: boolean
+}
+
 export interface NoteRepository {
-  load(): Promise<Note[]>
+  load(): Promise<LoadResult>
   save(notes: readonly Note[]): Promise<void>
 }
 
@@ -18,18 +23,26 @@ interface StorageLike {
 
 // A stored list from another version is ignored. The board starts empty
 // instead of crashing on data it does not understand.
-export function parseStoredNotes(raw: string | null): Note[] {
-  if (!raw) return []
+export function readStoredNotes(raw: string | null): LoadResult {
+  if (!raw) return { notes: [], ignored: false }
   let parsed: unknown
   try {
     parsed = JSON.parse(raw)
   } catch {
-    return []
+    return { notes: [], ignored: true }
   }
-  if (!parsed || typeof parsed !== 'object') return []
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return { notes: [], ignored: true }
+  }
   const record = parsed as { version?: unknown; notes?: unknown }
-  if (record.version !== SCHEMA_VERSION || !Array.isArray(record.notes)) return []
-  return record.notes.flatMap(toNote)
+  if (record.version !== SCHEMA_VERSION || !Array.isArray(record.notes)) {
+    return { notes: [], ignored: true }
+  }
+  return { notes: record.notes.flatMap(toNote), ignored: false }
+}
+
+export function parseStoredNotes(raw: string | null): Note[] {
+  return readStoredNotes(raw).notes
 }
 
 function toNote(value: unknown): Note[] {
@@ -107,7 +120,7 @@ export function createRestNoteRepository(
   return {
     async load() {
       const body = await http.get(NOTES_URL)
-      return parseStoredNotes(JSON.stringify(body))
+      return readStoredNotes(JSON.stringify(body))
     },
     async save(notes) {
       await http.put(NOTES_URL, JSON.parse(serializeNotes(notes)) as unknown)

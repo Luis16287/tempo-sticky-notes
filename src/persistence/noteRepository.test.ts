@@ -6,6 +6,7 @@ import {
   createLocalStorageHttpClient,
   createRestNoteRepository,
   parseStoredNotes,
+  readStoredNotes,
   serializeNotes,
 } from './noteRepository'
 
@@ -69,6 +70,21 @@ describe('parseStoredNotes', () => {
   })
 })
 
+describe('readStoredNotes', () => {
+  it('does not treat an empty store as a broken list', () => {
+    expect(readStoredNotes(null)).toEqual({ notes: [], ignored: false })
+    expect(readStoredNotes(JSON.stringify({ version: 1, notes: [] }))).toEqual({
+      notes: [],
+      ignored: false,
+    })
+  })
+
+  it('marks a broken or unknown payload as ignored', () => {
+    expect(readStoredNotes('{').ignored).toBe(true)
+    expect(readStoredNotes(JSON.stringify({ version: 2, notes: [note] })).ignored).toBe(true)
+  })
+})
+
 describe('createRestNoteRepository', () => {
   it('saves with PUT and loads the same list with GET', async () => {
     const storage = memoryStorage()
@@ -77,7 +93,7 @@ describe('createRestNoteRepository', () => {
 
     await repository.save([note])
 
-    await expect(repository.load()).resolves.toEqual([note])
+    await expect(repository.load()).resolves.toEqual({ notes: [note], ignored: false })
     expect(storage.getItem(NOTES_STORAGE_KEY)).toBe(serializeNotes([note]))
   })
 
@@ -118,7 +134,7 @@ describe('createRestNoteRepository', () => {
       await vi.advanceTimersByTimeAsync(1)
       await pending
 
-      expect(loaded).toEqual([note])
+      expect(loaded).toEqual({ notes: [note], ignored: false })
     } finally {
       vi.useRealTimers()
     }

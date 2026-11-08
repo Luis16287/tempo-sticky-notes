@@ -239,3 +239,51 @@ body {
   background: rgba(254, 226, 226, 0.95);
   color: #991b1b;
 }
+
+.toast {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 360px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: #1c1917;
+  font-size: 14px;
+  box-shadow: 0 8px 16px rgba(28, 25, 23, 0.16);
+}
+
+.toast-message {
+  margin: 0;
+}
+
+.toast-success {
+  background: #d9f2d4;
+  border: 1px solid #3d8b40;
+}
+
+.toast-warning {
+  background: #fff1c2;
+  border: 1px solid #a16207;
+}
+
+.toast-error {
+  background: #fde2e1;
+  border: 1px solid #b91c1c;
+}
+
+.toast-dismiss {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}

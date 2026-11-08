@@ -25,6 +25,7 @@ Vite prints a local URL, usually http://localhost:5173.
 - Bring a note to the front by touching it.
 - Choose one of five colors for a note.
 - Keep notes in the browser and restore them on reload, through an async save.
+- Show a short message when notes load, when saved notes cannot be read, or when a load or save fails.
 - Show the title and how many notes exist.
 
 ### Create a note
