@@ -25,7 +25,7 @@ Vite prints a local URL, usually http://localhost:5173.
 - Bring a note to the front by touching it.
 - Choose one of five colors for a note.
 - Keep notes in the browser and restore them on reload, through an async save.
-- Show note outlines while the saved notes are loading.
+- Show gray note shapes while the saved notes are loading.
 - Show a short message when notes load, when saved notes cannot be read, or when a load or save fails.
 - Show the title and how many notes exist.
 
@@ -68,7 +68,7 @@ Drag a note until the pointer is over the trash icon, then release. That note is
 - `App.tsx` keeps the list of notes and the toolbar. It loads and saves that list. It does not listen to the pointer.
 - `Board.tsx` is the board surface. It creates a note and owns the trash.
 - `Note.tsx` is a single note. The grip moves it, the colors sit on the right of that bar, the corner resizes it, and the body edits the text. Touching it brings it to the front.
-- `NoteSkeleton.tsx` draws the outlines shown while the list is loading. `skeletonLayout.ts` picks one of three arrangements, so the count is not the same on every visit.
+- `NoteSkeleton.tsx` draws the gray shapes shown while the list is loading. `skeletonLayout.ts` picks one of three arrangements, so the count is not the same on every visit.
 
 ## Decisions
 
@@ -80,19 +80,19 @@ While a note is dragged, it is drawn on the element. The new position is saved w
 
 A note is deleted only when the pointer itself is over the trash. The edge of the note does not count. That avoids deleting a note that only brushes the zone.
 
-A note stores a color name from a fixed list of five. It does not store a free color value. A note saved before colors existed, or with a name that is not in the list, opens as yellow. The page stays light, so the browser does not darken the notes until they match the board.
+A note stores a color name from a fixed list of five. It does not store a free color value. A note saved before colors existed, or with a name that is not in the list, opens as yellow. The page stays light, so the browser does not darken the notes and make them the same color as the board.
 
 Each note keeps a stacking number. The one you touch gets a higher number than the rest. A note saved before that number existed opens at the back. The new size is saved when the pointer is released, the same way as the position.
 
-Saving goes through a repository, not a direct call from the note. The write waits a short time, so each key does not touch storage. The repository then waits again before it reads or writes. That second wait stands in for a request. The read waits longer than the write, so the outlines stay on screen. The stored list has a version. A list from another version is ignored and the board starts empty.
+Saving goes through a repository, not a direct call from the note. The write waits a short time, so each key does not touch storage. The repository then waits again before it reads or writes. That second wait stands in for a request. The read waits longer than the write, so the gray shapes stay on screen. The stored list has a version. A list from another version is ignored and the board starts empty.
 
 ## Architecture
 
 The board is a React list. `App` owns that list and the toolbar. `Board` draws a new note and owns the trash. `Note` moves, resizes, edits the text, and sets the color. Size, position, and stacking are plain functions, covered by unit tests. The gestures use pointer events. The trash needs the pointer itself to decide if the note is deleted, and a drag library would hide that.
 
-A new note is drawn on the board. One press of the button creates one note. A short drag counts as a click and uses the default size. A longer drag uses the drawn size, down to a minimum, and stays inside the board. Positions are relative to the board, because the toolbar sits above it. While the pointer is down, the outline and the dragged note are painted on the element. The React list changes only when the pointer is released, so the other notes are not drawn again on every move.
+While the saved notes are loading, the board shows gray shapes instead of the list. It picks one of three arrangements for that visit, so the number of shapes is not always the same. The shapes leave when the load finishes and the saved notes appear. They follow the load itself. The screen does not keep them after the notes have arrived.
 
-Notes are loaded and saved through one repository. That repository calls a mocked API, `GET /api/notes` and `PUT /api/notes`. The mock waits, then reads and writes localStorage, which stands in for the server. The read waits longer than the write, from 800 ms to 1400 ms, so the board can show note outlines while the list is still loading. The screen waits for the load before New note is enabled, and it does not save an empty list before that load finishes. A real HTTP API can replace this client later without changing the board. The saved list has a version. A note that is missing a newer field, such as text, stacking, or color, still opens with a default. The app is for one person, on a desktop screen of at least 1024×768, in the latest Chrome, Firefox, or Edge. There is no shared server.
+Notes are loaded and saved through one repository. That repository calls a mocked API, `GET /api/notes` and `PUT /api/notes`. The mock waits, then reads and writes localStorage, which stands in for the server. The read waits longer than the write, from 800 ms to 1400 ms, so those shapes stay visible. The screen waits for the load before New note is enabled, and it does not save an empty list before that load finishes. A real HTTP API can replace this client later without changing the board. The saved list has a version. A note that is missing a newer field, such as text, stacking, or color, still opens with a default. The app is for one person, on a desktop screen of at least 1024×768, in the latest Chrome, Firefox, or Edge. There is no shared server.
 
 ## Scripts
 
