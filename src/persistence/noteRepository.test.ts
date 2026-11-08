@@ -1,8 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   NOTES_STORAGE_KEY,
+  REPOSITORY_DELAY_MS,
   createLocalStorageNoteRepository,
   parseStoredNotes,
+  serializeNotes,
 } from './noteRepository'
 
 function memoryStorage() {
@@ -67,10 +69,59 @@ describe('parseStoredNotes', () => {
 
 describe('createLocalStorageNoteRepository', () => {
   it('saves notes and loads the same list', async () => {
-    const repository = createLocalStorageNoteRepository(memoryStorage(), NOTES_STORAGE_KEY)
+    const repository = createLocalStorageNoteRepository(memoryStorage(), NOTES_STORAGE_KEY, 0)
 
     await repository.save([note])
 
     await expect(repository.load()).resolves.toEqual([note])
+  })
+
+  it('does not write until the delay has passed', async () => {
+    vi.useFakeTimers()
+    try {
+      const storage = memoryStorage()
+      const repository = createLocalStorageNoteRepository(
+        storage,
+        NOTES_STORAGE_KEY,
+        REPOSITORY_DELAY_MS,
+      )
+      const pending = repository.save([note])
+
+      expect(storage.getItem(NOTES_STORAGE_KEY)).toBeNull()
+
+      await vi.advanceTimersByTimeAsync(REPOSITORY_DELAY_MS)
+      await pending
+
+      expect(parseStoredNotes(storage.getItem(NOTES_STORAGE_KEY))).toEqual([note])
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('does not read until the delay has passed', async () => {
+    vi.useFakeTimers()
+    try {
+      const storage = memoryStorage()
+      storage.setItem(NOTES_STORAGE_KEY, serializeNotes([note]))
+      const repository = createLocalStorageNoteRepository(
+        storage,
+        NOTES_STORAGE_KEY,
+        REPOSITORY_DELAY_MS,
+      )
+      let loaded: unknown
+      const pending = repository.load().then((notes) => {
+        loaded = notes
+      })
+
+      await vi.advanceTimersByTimeAsync(REPOSITORY_DELAY_MS - 1)
+      expect(loaded).toBeUndefined()
+
+      await vi.advanceTimersByTimeAsync(1)
+      await pending
+
+      expect(loaded).toEqual([note])
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

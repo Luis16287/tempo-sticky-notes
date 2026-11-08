@@ -1,6 +1,9 @@
 import { noteColor, type Note } from '../domain/notes.ts'
 
 export const NOTES_STORAGE_KEY = 'sticky-notes'
+// The pause stands in for a request. Callers already wait on the promise,
+// so a real API can replace this repository without changing the board.
+export const REPOSITORY_DELAY_MS = 200
 const SCHEMA_VERSION = 1
 
 export interface NoteRepository {
@@ -60,15 +63,24 @@ export function serializeNotes(notes: readonly Note[]): string {
   return JSON.stringify({ version: SCHEMA_VERSION, notes })
 }
 
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
+
 export function createLocalStorageNoteRepository(
   storage: StorageLike = localStorage,
   key = NOTES_STORAGE_KEY,
+  delayMs = REPOSITORY_DELAY_MS,
 ): NoteRepository {
   return {
     async load() {
+      await wait(delayMs)
       return parseStoredNotes(storage.getItem(key))
     },
     async save(notes) {
+      await wait(delayMs)
       storage.setItem(key, serializeNotes(notes))
     },
   }

@@ -24,7 +24,7 @@ Vite prints a local URL, usually http://localhost:5173.
 - Resize a note from its corner.
 - Bring a note to the front by touching it.
 - Choose one of five colors for a note.
-- Keep notes in the browser and restore them on reload.
+- Keep notes in the browser and restore them on reload, through an async save.
 - Show the title and how many notes exist.
 
 ### Create a note
@@ -81,7 +81,15 @@ A note stores a color name from a fixed list of five. It does not store a free c
 
 Each note keeps a stacking number. The one you touch gets a higher number than the rest. A note saved before that number existed opens at the back. The new size is saved when the pointer is released, the same way as the position.
 
-Saving goes through a repository, not a direct call from the note. The write waits a short time, so each key does not touch storage. The stored list has a version. A list from another version is ignored and the board starts empty.
+Saving goes through a repository, not a direct call from the note. The write waits a short time, so each key does not touch storage. The repository then waits again before it reads or writes. That second wait stands in for a request. The stored list has a version. A list from another version is ignored and the board starts empty.
+
+## Architecture
+
+The board is a React list. `App` owns that list and the toolbar. `Board` draws a new note and owns the trash. `Note` moves, resizes, edits the text, and sets the color. Size, position, and stacking are plain functions, covered by unit tests. The gestures use pointer events. The trash needs the pointer itself to decide if the note is deleted, and a drag library would hide that.
+
+A new note is drawn on the board. One press of the button creates one note. A short drag counts as a click and uses the default size. A longer drag uses the drawn size, down to a minimum, and stays inside the board. Positions are relative to the board, because the toolbar sits above it. While the pointer is down, the outline and the dragged note are painted on the element. The React list changes only when the pointer is released, so the other notes are not drawn again on every move.
+
+Notes are loaded and saved through one repository. Both calls return a promise, wait a short time, and then use localStorage. The screen waits for the load before New note is enabled, and it does not save an empty list before that load finishes. A real HTTP API can replace this repository later without changing the board. The saved list has a version. A note that is missing a newer field, such as text, stacking, or color, still opens with a default. The app is for one person, on a desktop screen of at least 1024×768, in the latest Chrome, Firefox, or Edge. There is no shared server.
 
 ## Scripts
 
