@@ -1,7 +1,7 @@
 import { useEffect, useReducer, useRef, useState } from 'react'
 import { Board } from './Board.tsx'
 import { createNote, nextZIndex, noteCountLabel, notesReducer } from './domain/notes'
-import { createLocalStorageNoteRepository } from './persistence/noteRepository.ts'
+import { createRestNoteRepository } from './persistence/noteRepository.ts'
 
 const SAVE_DELAY_MS = 300
 
@@ -11,7 +11,7 @@ export default function App() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [ready, setReady] = useState(false)
   const [statusText, setStatusText] = useState('Loading')
-  const repository = useRef(createLocalStorageNoteRepository())
+  const repository = useRef(createRestNoteRepository())
 
   useEffect(() => {
     let cancelled = false

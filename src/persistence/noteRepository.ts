@@ -63,25 +63,54 @@ export function serializeNotes(notes: readonly Note[]): string {
   return JSON.stringify({ version: SCHEMA_VERSION, notes })
 }
 
+export const NOTES_URL = '/api/notes'
+
+export interface HttpClient {
+  get(url: string): Promise<unknown>
+  put(url: string, body: unknown): Promise<void>
+}
+
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, ms)
   })
 }
 
-export function createLocalStorageNoteRepository(
+// localStorage is the fake server. The board never calls it directly.
+export function createLocalStorageHttpClient(
   storage: StorageLike = localStorage,
-  key = NOTES_STORAGE_KEY,
   delayMs = REPOSITORY_DELAY_MS,
+): HttpClient {
+  return {
+    async get(url) {
+      await wait(delayMs)
+      if (url !== NOTES_URL) throw new Error(`Unknown route: ${url}`)
+      const raw = storage.getItem(NOTES_STORAGE_KEY)
+      if (!raw) return { version: SCHEMA_VERSION, notes: [] }
+      try {
+        return JSON.parse(raw) as unknown
+      } catch {
+        return null
+      }
+    },
+    async put(url, body) {
+      await wait(delayMs)
+      if (url !== NOTES_URL) throw new Error(`Unknown route: ${url}`)
+      storage.setItem(NOTES_STORAGE_KEY, JSON.stringify(body))
+    },
+  }
+}
+
+export function createRestNoteRepository(
+  http: HttpClient = createLocalStorageHttpClient(),
 ): NoteRepository {
   return {
     async load() {
-      await wait(delayMs)
-      return parseStoredNotes(storage.getItem(key))
+      const body = await http.get(NOTES_URL)
+      return parseStoredNotes(JSON.stringify(body))
     },
     async save(notes) {
-      await wait(delayMs)
-      storage.setItem(key, serializeNotes(notes))
+      await http.put(NOTES_URL, JSON.parse(serializeNotes(notes)) as unknown)
     },
   }
 }

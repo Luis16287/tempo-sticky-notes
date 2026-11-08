@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
   NOTES_STORAGE_KEY,
+  NOTES_URL,
   REPOSITORY_DELAY_MS,
-  createLocalStorageNoteRepository,
+  createLocalStorageHttpClient,
+  createRestNoteRepository,
   parseStoredNotes,
   serializeNotes,
 } from './noteRepository'
@@ -67,25 +69,24 @@ describe('parseStoredNotes', () => {
   })
 })
 
-describe('createLocalStorageNoteRepository', () => {
-  it('saves notes and loads the same list', async () => {
-    const repository = createLocalStorageNoteRepository(memoryStorage(), NOTES_STORAGE_KEY, 0)
+describe('createRestNoteRepository', () => {
+  it('saves with PUT and loads the same list with GET', async () => {
+    const storage = memoryStorage()
+    const http = createLocalStorageHttpClient(storage, 0)
+    const repository = createRestNoteRepository(http)
 
     await repository.save([note])
 
     await expect(repository.load()).resolves.toEqual([note])
+    expect(storage.getItem(NOTES_STORAGE_KEY)).toBe(serializeNotes([note]))
   })
 
-  it('does not write until the delay has passed', async () => {
+  it('does not PUT until the delay has passed', async () => {
     vi.useFakeTimers()
     try {
       const storage = memoryStorage()
-      const repository = createLocalStorageNoteRepository(
-        storage,
-        NOTES_STORAGE_KEY,
-        REPOSITORY_DELAY_MS,
-      )
-      const pending = repository.save([note])
+      const http = createLocalStorageHttpClient(storage, REPOSITORY_DELAY_MS)
+      const pending = http.put(NOTES_URL, JSON.parse(serializeNotes([note])) as unknown)
 
       expect(storage.getItem(NOTES_STORAGE_KEY)).toBeNull()
 
@@ -98,15 +99,13 @@ describe('createLocalStorageNoteRepository', () => {
     }
   })
 
-  it('does not read until the delay has passed', async () => {
+  it('does not GET until the delay has passed', async () => {
     vi.useFakeTimers()
     try {
       const storage = memoryStorage()
       storage.setItem(NOTES_STORAGE_KEY, serializeNotes([note]))
-      const repository = createLocalStorageNoteRepository(
-        storage,
-        NOTES_STORAGE_KEY,
-        REPOSITORY_DELAY_MS,
+      const repository = createRestNoteRepository(
+        createLocalStorageHttpClient(storage, REPOSITORY_DELAY_MS),
       )
       let loaded: unknown
       const pending = repository.load().then((notes) => {
