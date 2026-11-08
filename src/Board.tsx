@@ -1,4 +1,4 @@
-import { useRef, type PointerEvent } from 'react'
+import { useRef, useState, type PointerEvent } from 'react'
 import {
   containsPoint,
   noteRectFromGesture,
@@ -14,9 +14,12 @@ import {
   type Note,
 } from './domain/notes'
 import { NoteCard } from './Note.tsx'
+import { NoteSkeleton } from './NoteSkeleton.tsx'
+import { pickSkeletonLayout } from './skeletonLayout.ts'
 
 interface BoardProps {
   notes: readonly Note[]
+  loading: boolean
   creating: boolean
   editingId: string | null
   onCreate: (rect: Rect) => void
@@ -30,6 +33,7 @@ interface BoardProps {
 
 export function Board({
   notes,
+  loading,
   creating,
   editingId,
   onCreate,
@@ -40,6 +44,7 @@ export function Board({
   onBringToFront,
   onSetColor,
 }: BoardProps) {
+  const [skeletonNotes] = useState(pickSkeletonLayout)
   const boardRef = useRef<HTMLElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
   const trashRef = useRef<HTMLDivElement>(null)
@@ -152,11 +157,13 @@ export function Board({
       ref={boardRef}
       className={creating ? 'board board-creating' : 'board'}
       aria-label="Board"
+      aria-busy={loading}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={(event) => finishGesture(event, true)}
       onPointerCancel={(event) => finishGesture(event, false)}
     >
+      {loading ? <NoteSkeleton notes={skeletonNotes} /> : null}
       {notes.map((note) => (
         <NoteCard
           key={note.id}

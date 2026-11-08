@@ -211,6 +211,61 @@ body {
   display: flex;
 }
 
+/* The board is already this gray family. A card of the same color would
+   disappear, so the outline is a little darker and a white band crosses it. */
+.note-skeleton {
+  position: absolute;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #d6d3d1;
+  box-shadow: 0 8px 16px rgba(28, 25, 23, 0.12);
+  pointer-events: none;
+}
+
+.note-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.85),
+    rgba(255, 255, 255, 0)
+  );
+  transform: translateX(-100%);
+  animation: note-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.note-skeleton-header {
+  height: 28px;
+  margin: 10px 10px 0;
+  border-radius: 2px;
+  background: #a8a29e;
+}
+
+.note-skeleton-line {
+  height: 10px;
+  margin: 12px 10px 0;
+  border-radius: 2px;
+  background: #a8a29e;
+}
+
+.note-skeleton-line-short {
+  width: 55%;
+}
+
+@keyframes note-skeleton-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .note-skeleton::after {
+    animation: none;
+  }
+}
+
 .trash {
   position: absolute;
   right: 16px;

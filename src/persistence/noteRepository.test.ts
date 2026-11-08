@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  LOAD_DELAY_MAX_MS,
+  LOAD_DELAY_MIN_MS,
   NOTES_STORAGE_KEY,
   NOTES_URL,
   REPOSITORY_DELAY_MS,
   createLocalStorageHttpClient,
+  loadDelayMs,
   createRestNoteRepository,
   parseStoredNotes,
   readStoredNotes,
@@ -110,6 +113,44 @@ describe('createRestNoteRepository', () => {
       await pending
 
       expect(parseStoredNotes(storage.getItem(NOTES_STORAGE_KEY))).toEqual([note])
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('keeps the default load delay between the bounds', () => {
+    expect(loadDelayMs(() => 0)).toBe(LOAD_DELAY_MIN_MS)
+    expect(loadDelayMs(() => 1)).toBe(LOAD_DELAY_MAX_MS)
+  })
+
+  it('waits longer on GET than on PUT when no delay is given', async () => {
+    vi.useFakeTimers()
+    try {
+      const storage = memoryStorage()
+      const http = createLocalStorageHttpClient(storage, undefined, () => 0)
+      let loaded = false
+      const pendingGet = http.get(NOTES_URL).then(() => {
+        loaded = true
+      })
+
+      await vi.advanceTimersByTimeAsync(LOAD_DELAY_MIN_MS - 1)
+      expect(loaded).toBe(false)
+
+      await vi.advanceTimersByTimeAsync(1)
+      await pendingGet
+      expect(loaded).toBe(true)
+
+      let saved = false
+      const pendingPut = http.put(NOTES_URL, { version: 1, notes: [] }).then(() => {
+        saved = true
+      })
+
+      await vi.advanceTimersByTimeAsync(REPOSITORY_DELAY_MS - 1)
+      expect(saved).toBe(false)
+
+      await vi.advanceTimersByTimeAsync(1)
+      await pendingPut
+      expect(saved).toBe(true)
     } finally {
       vi.useRealTimers()
     }

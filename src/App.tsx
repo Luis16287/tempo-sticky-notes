@@ -103,6 +103,7 @@ export default function App() {
       </header>
       <Board
         notes={notes}
+        loading={phase === 'loading'}
         creating={creating}
         editingId={editingId}
         onCreate={(rect) => {

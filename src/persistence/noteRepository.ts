@@ -4,6 +4,9 @@ export const NOTES_STORAGE_KEY = 'sticky-notes'
 // The pause stands in for a request. Callers already wait on the promise,
 // so a real API can replace this repository without changing the board.
 export const REPOSITORY_DELAY_MS = 200
+// The read is slower than a save, so the note outlines stay on screen.
+export const LOAD_DELAY_MIN_MS = 800
+export const LOAD_DELAY_MAX_MS = 1400
 const SCHEMA_VERSION = 1
 
 export interface LoadResult {
@@ -89,14 +92,21 @@ function wait(ms: number): Promise<void> {
   })
 }
 
+export function loadDelayMs(random: () => number = Math.random): number {
+  return LOAD_DELAY_MIN_MS + random() * (LOAD_DELAY_MAX_MS - LOAD_DELAY_MIN_MS)
+}
+
 // localStorage is the fake server. The board never calls it directly.
+// A fixed delay is for tests. The app leaves it unset, so a load varies
+// and a save stays short.
 export function createLocalStorageHttpClient(
   storage: StorageLike = localStorage,
-  delayMs = REPOSITORY_DELAY_MS,
+  delayMs?: number,
+  random: () => number = Math.random,
 ): HttpClient {
   return {
     async get(url) {
-      await wait(delayMs)
+      await wait(delayMs ?? loadDelayMs(random))
       if (url !== NOTES_URL) throw new Error(`Unknown route: ${url}`)
       const raw = storage.getItem(NOTES_STORAGE_KEY)
       if (!raw) return { version: SCHEMA_VERSION, notes: [] }
@@ -107,7 +117,7 @@ export function createLocalStorageHttpClient(
       }
     },
     async put(url, body) {
-      await wait(delayMs)
+      await wait(delayMs ?? REPOSITORY_DELAY_MS)
       if (url !== NOTES_URL) throw new Error(`Unknown route: ${url}`)
       storage.setItem(NOTES_STORAGE_KEY, JSON.stringify(body))
     },
